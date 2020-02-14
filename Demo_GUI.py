@@ -32,6 +32,9 @@ import cv2
 import os, sys
 import pickle
 from PyQt5 import QtGui,QtWidgets   # If PyQt4 is not working in your case, you can try PyQt5, 
+
+import video_extractor
+
 seed = 7
 numpy.random.seed(seed)
 
@@ -204,6 +207,8 @@ class PrettyWidget(QtWidgets.QWidget):
         break_pt=min(scores1.shape[0], x.shape[0])
         plt.axis([0, Total_frames, 0, 1])
         i=0;
+#temp is temporal value it have to be change by gradient chage.
+        temp=0
         while True:
             flag, frame = cap.read()
             if flag:
@@ -217,6 +222,9 @@ class PrettyWidget(QtWidgets.QWidget):
 
                 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
                 print (str(pos_frame) + " frames")
+                if scores1[i-1]>=0.7 and temp==0:
+                     temp+=1
+                     video_extractor.save_video(video_path,pos_frame)				
             else:
                 # The next frame is not ready, so we try to read it again
                 cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame - 1)
