@@ -134,7 +134,7 @@ class PrettyWidget(QtWidgets.QWidget):
         self.setWindowTitle('Anomaly Detection')
         btn = QtWidgets.QPushButton('ANOMALY DETECTION SYSTEM \n Please select video', self)
 
-        Model_dir = '/Users/gicheol/Downloads/lab/AnomalyDetectionCVPR2018/'
+        Model_dir = './'
         weights_path = Model_dir + 'weights_L1L2.mat'
         model_path = Model_dir + 'model.json'
         ########################################
@@ -161,7 +161,7 @@ class PrettyWidget(QtWidgets.QWidget):
     def SingleBrowse(self):
         video_path , _ = QtWidgets.QFileDialog.getOpenFileName(self,
                                                         'Single File',
-                                                        "/Users/gicheol/Downloads/lab/AnomalyDetectionCVPR2018/")
+                                                        "./")
 
         print(video_path)
         cap = cv2.VideoCapture(video_path)

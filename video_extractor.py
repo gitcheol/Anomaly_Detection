@@ -40,7 +40,8 @@ def save_video(video_path,frame_num):
 		#print('aasdsd : '+ type(size))
 		img_array.append(img)
 
-	out=cv2.VideoWriter('Extracted_Video.avi',cv2.VideoWriter_fourcc(*'DIVX'),30,size)
+	os.makedirs("./result")
+	out=cv2.VideoWriter('./result/Extracted_Video.avi',cv2.VideoWriter_fourcc(*'DIVX'),30,size)
 
 	for i in range(len(img_array)):
 		out.write(img_array[i])
