@@ -221,10 +221,12 @@ class PrettyWidget(QtWidgets.QWidget):
                     plt.pause(0.000000000000000000000001)
 
                 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-                print (str(pos_frame) + " frames")
+                print (str(pos_frame) + " frames    ",scores1[i-1])
+                '''
                 if scores1[i-1]>=0.7 and temp==0:
                      temp+=1
-                     video_extractor.save_video(video_path,pos_frame)				
+                     video_extractor.save_video(video_path,pos_frame)
+                '''	
             else:
                 # The next frame is not ready, so we try to read it again
                 cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame - 1)

@@ -22,7 +22,7 @@ def save_video(video_path,frame_num):
 		if ret == False:
 			break
 		if i >= frame_num-time and i<=frame_num+time:
-			cv2.imwrite('./temp_img/R'+str(i).zfill(10)+'.jpg',frame)
+			cv2.imwrite('./temp_img/R'+str(i).zfill(13)+'.jpg',frame)
 		i+=1
 
 	#print("frame num : " + str(i))
