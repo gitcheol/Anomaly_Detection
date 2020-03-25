@@ -14,7 +14,7 @@ def divide_video(video_path):
 	i=0
 	#make the output folder
 	temp_img="./temp_img"
-	result_video='./result'
+	result_video='./divided_video'
 	if not os.path.isdir(temp_img):
 		os.mkdir(temp_img)	
 	if not os.path.isdir(result_video):
@@ -45,7 +45,7 @@ def divide_video(video_path):
 	##print(len(img_array)//32)
 	out=[]
 	for i in range(32):
-		out.append(cv2.VideoWriter('./result/videoSegments'+str(i+1)+'.avi',cv2.VideoWriter_fourcc(*'DIVX'),30,size))
+		out.append(cv2.VideoWriter(result_video+'/videoSegments'+str(i+1)+'.avi',cv2.VideoWriter_fourcc(*'DIVX'),30,size))
 	for i in range(32):
 		for j in range(len(img_array)//32):
 			out[i].write(img_array[j+i*(len(img_array)//32)])

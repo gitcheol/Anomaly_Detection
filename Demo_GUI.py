@@ -207,8 +207,11 @@ class PrettyWidget(QtWidgets.QWidget):
         break_pt=min(scores1.shape[0], x.shape[0])
         plt.axis([0, Total_frames, 0, 1])
         i=0;
-#temp is temporal value it have to be change by gradient chage.
-        temp=0
+#temp,flag,anomaly_start,anomaly_finish  is list of the frame that present the anomaly
+        flag_of_frame=0
+        anomaly_start=0
+        anomaly_finish=0
+        temp=[]
         while True:
             flag, frame = cap.read()
             if flag:
@@ -222,11 +225,16 @@ class PrettyWidget(QtWidgets.QWidget):
 
                 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
                 print (str(pos_frame) + " frames    ",scores1[i-1])
-                '''
-                if scores1[i-1]>=0.7 and temp==0:
-                     temp+=1
-                     video_extractor.save_video(video_path,pos_frame)
-                '''	
+                sensitivity=0.4 
+#if the score >=0.7, we append the frame number of the video to the list temp.
+                if scores1[i-1]>=sensitivity and flag_of_frame==0:
+                     flag_of_frame=1
+                     anomaly_start=pos_frame
+                if scores1[i-1]<=sensitivity and flag_of_frame==1: 
+                     flag_of_frame=0 
+                     anomaly_finish=pos_frame
+                     temp.append([int(anomaly_start),int(anomaly_finish)])
+            
             else:
                 # The next frame is not ready, so we try to read it again
                 cap.set(cv2.CAP_PROP_POS_FRAMES, pos_frame - 1)
@@ -241,6 +249,8 @@ class PrettyWidget(QtWidgets.QWidget):
                 # If the number of captured frames is equal to the total number of frames,
                 # we stop
                 break
+        video_extractor.save_video(video_path,temp)
+        
 
 
 def main():
