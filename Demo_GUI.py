@@ -159,10 +159,11 @@ class PrettyWidget(QtWidgets.QWidget):
 
 
     def SingleBrowse(self):
+        #getting a video from here       
         video_path , _ = QtWidgets.QFileDialog.getOpenFileName(self,
                                                         'Single File',
                                                         "./")
-
+        #we need to divide video into 32 segments. them training the C3D features from here. after extracting the feature we input the features into the below variables. 
         print(video_path)
         cap = cv2.VideoCapture(video_path)
         #Total_frames = cap.get(cv2.CV_CAP_PROP_FRAME_COUNT)
