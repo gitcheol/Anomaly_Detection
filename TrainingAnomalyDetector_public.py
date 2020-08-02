@@ -7,7 +7,7 @@ from keras.models import model_from_json
 import theano.tensor as T
 import theano
 import csv
-import ConfigParser
+import configparser
 import collections
 import time
 import csv
@@ -23,8 +23,10 @@ import path
 from os.path import basename
 import glob
 import theano.sandbox
-theano.sandbox.cuda.use('gpu0')
-
+import sys
+#theano.sandbox.cuda.use('gpu0')
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda0,dnn.enabled=False,floatX=float32"
+os.environ["KERAS_BACKEND"] = "theano"
 
 print("Create Model")
 model = Sequential()
@@ -33,7 +35,6 @@ model.add(Dropout(0.6))
 model.add(Dense(32,init='glorot_normal',W_regularizer=l2(0.001)))
 model.add(Dropout(0.6))
 model.add(Dense(1,init='glorot_normal',W_regularizer=l2(0.001),activation='sigmoid'))
-
 
 def load_model(json_path): # Function to load the model
     model = model_from_json(open(json_path).read())
@@ -90,22 +91,32 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
 #    print("Loading training batch")
 
     batchsize=60       # Each batch contain 60 videos.
-    n_exp=batchsize/2  # Number of abnormal and normal videos
+    n_exp=int(batchsize/2)  # Number of abnormal and normal videos
 
-    Num_abnormal = 810  # Total number of abnormal videos in Training Dataset.
-    Num_Normal = 800    # Total number of Normal videos in Training Dataset.
+    Num_abnormal =175  # Total number of abnormal videos in Training Dataset.
+    Num_Normal = 63    # Total number of Normal videos in Training Dataset.
 
 
     # We assume the features of abnormal videos and normal videos are located in two different folders.
     Abnor_list_iter = np.random.permutation(Num_abnormal)
+    #print(Abnor_list_iter)
     Abnor_list_iter = Abnor_list_iter[Num_abnormal-n_exp:] # Indexes for randomly selected Abnormal Videos
     Norm_list_iter = np.random.permutation(Num_Normal)
     Norm_list_iter = Norm_list_iter[Num_Normal-n_exp:]     # Indexes for randomly selected Normal Videos
 
 
     AllVideos_Path = AbnormalPath
+
+    print(AllVideos_Path)
+	
+ 
+    #print(Norm_list_iter)
+
+    
     def listdir_nohidden(AllVideos_Path):  # To ignore hidden files
-        file_dir_extension = os.path.join(AllVideos_Path, '*_C.txt')
+        #file_dir_extension = os.path.join(AllVideos_Path, '*_C.txt')
+        file_dir_extension = os.path.join(AllVideos_Path, '*.txt')
+        print("file dir extension : ",file_dir_extension)
         for f in glob.glob(file_dir_extension):
             if not f.startswith('.'):
                 yield os.path.basename(f)
@@ -114,6 +125,8 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
     All_Videos.sort()
     AllFeatures = []  # To store C3D features of a batch
     print("Loading Abnormal videos Features...")
+
+    #print(All_Videos)
 
     Video_count=-1
     for iv in Abnor_list_iter:
@@ -127,7 +140,7 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
 
         count = -1;
         VideoFeatues = []
-        for feat in xrange(0, num_feat):
+        for feat in range(0, int(num_feat)):
             feat_row1 = np.float32(words[feat * 4096:feat * 4096 + 4096])
             count = count + 1
             if count == 0:
@@ -147,7 +160,7 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
     AllVideos_Path =  NormalPath
 
     def listdir_nohidden(AllVideos_Path):  # To ignore hidden files
-        file_dir_extension = os.path.join(AllVideos_Path, '*_C.txt')
+        file_dir_extension = os.path.join(AllVideos_Path, '*.txt')
         for f in glob.glob(file_dir_extension):
             if not f.startswith('.'):
                 yield os.path.basename(f)
@@ -155,8 +168,11 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
     All_Videos = sorted(listdir_nohidden(AllVideos_Path))
     All_Videos.sort()
 
+    #print(All_Videos)
+    
     for iv in Norm_list_iter:
         VideoPath = os.path.join(AllVideos_Path, All_Videos[iv])
+        print(VideoPath)
         f = open(VideoPath, "r")
         words = f.read().split()
         feat_row1 = np.array([])
@@ -164,9 +180,7 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
 
         count = -1;
         VideoFeatues = []
-        for feat in xrange(0, num_feat):
-
-
+        for feat in range(0, int(num_feat)):
             feat_row1 = np.float32(words[feat * 4096:feat * 4096 + 4096])
             count = count + 1
             if count == 0:
@@ -185,7 +199,7 @@ def load_dataset_Train_batch(AbnormalPath, NormalPath):
 
 
 
-    for iv in xrange(0, 32*batchsize):
+    for iv in range(0, int(32*batchsize)):
             if iv< th_loop1:
                 AllLabels[iv] = int(0)  # All instances of abnormal videos are labeled 0.  This will be used in custom_objective to keep track of normal and abnormal videos indexes.
             if iv > th_loop2:
@@ -203,7 +217,7 @@ def custom_objective(y_true, y_pred):
 
     n_seg = 32  # Because we have 32 segments per video.
     nvid = 60
-    n_exp = nvid / 2
+    n_exp = int(nvid / 2)
     Num_d=32*nvid
 
 
@@ -212,7 +226,7 @@ def custom_objective(y_true, y_pred):
     sub_sum_l1=T.ones_like(y_true)  # For holding the concatenation of summation of scores in the bag.
     sub_l2 = T.ones_like(y_true) # For holding the concatenation of L2 of score in the bag.
 
-    for ii in xrange(0, nvid, 1):
+    for ii in range(0, int(nvid), 1):
         # For Labels
         mm = y_true[ii * n_seg:ii * n_seg + n_seg]
         sub_sum_labels = T.concatenate([sub_sum_labels, T.stack(T.sum(mm))])  # Just to keep track of abnormal and normal vidoes
@@ -263,7 +277,7 @@ def custom_objective(y_true, y_pred):
     Sub_Abn = sub_score[indx_abn] # Maximum Score for each of normal video
 
     z = T.ones_like(y_true)
-    for ii in xrange(0, n_Nor, 1):
+    for ii in range(0, int(n_Nor), 1):
         sub_z = T.maximum(1 - Sub_Abn + Sub_Nor[ii], 0)
         z = T.concatenate([z, T.stack(T.sum(sub_z))])
 
@@ -279,13 +293,15 @@ model.compile(loss=custom_objective, optimizer=adagrad)
 
 print("Starting training...")
 
-AllClassPath='/newdata/UCF_Anomaly_Dataset/Dataset/CVPR_Data/C3D_Features_Txt/Train/'
+AllClassPath='/home/gicheol/lab/test/c3d_feature_shanghaitech/all'
 # AllClassPath contains C3D features (.txt file)  of each video. Each text file contains 32 features, each of 4096 dimension
-output_dir='/newdata/UCF_Anomaly_Dataset/Dataset/CVPR_Data/Trained_Models/TrainedModel_MIL_C3D/'
+output_dir='/home/gicheol/lab/test/c3d_feature_shanghaitech/output'
 # Output_dir is the directory where you want to save trained weights
 weights_path = output_dir + 'weights.mat'
 # weights.mat are the model weights that you will get after (or during) that training
 model_path = output_dir + 'model.json'
+
+
 
 if not os.path.exists(output_dir):
        os.makedirs(output_dir)
@@ -298,16 +314,27 @@ total_iterations = 0
 batchsize=60
 time_before = datetime.now()
 
+#print(All_class_files)
+#print(All_class_files[0])
+
+
 for it_num in range(num_iters):
 
-    AbnormalPath = os.path.join(AllClassPath, All_class_files[0])  # Path of abnormal already computed C3D features
-    NormalPath = os.path.join(AllClassPath, All_class_files[1])    # Path of Normal already computed C3D features
+
+#    AbnormalPath = os.path.join(AllClassPath, All_class_files[0])  # Path of abnormal already computed C3D features
+#    NormalPath = os.path.join(AllClassPath, All_class_files[1])    # Path of Normal already computed C3D features
+
+    AbnormalPath='/home/gicheol/lab/test/c3d_feature_shanghaitech/all/train_abnormal'
+    NormalPath='/home/gicheol/lab/test/c3d_feature_shanghaitech/all/train_normal'
+
     inputs, targets=load_dataset_Train_batch(AbnormalPath, NormalPath)  # Load normal and abnormal video C3D features
+ 
+    
     batch_loss =model.train_on_batch(inputs, targets)
     loss_graph = np.hstack((loss_graph, batch_loss))
     total_iterations += 1
     if total_iterations % 20 == 1:
-        print "These iteration=" + str(total_iterations) + ") took: " + str(datetime.now() - time_before) + ", with loss of " + str(batch_loss)
+        print ("These iteration=" + str(total_iterations) + ") took: " + str(datetime.now() - time_before) + ", with loss of " + str(batch_loss))
         iteration_path = output_dir + 'Iterations_graph_' + str(total_iterations) + '.mat'
         savemat(iteration_path, dict(loss_graph=loss_graph))
     if total_iterations % 1000 == 0:  # Save the model at every 1000th iterations.

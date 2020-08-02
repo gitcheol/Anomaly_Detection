@@ -249,7 +249,7 @@ class PrettyWidget(QtWidgets.QWidget):
                 # If the number of captured frames is equal to the total number of frames,
                 # we stop
                 break
-        video_extractor.save_video(video_path,temp)
+        #video_extractor.save_video(video_path,temp)
         
 
 
