@@ -7,7 +7,7 @@ from keras.models import model_from_json
 import theano.tensor as T
 import theano
 import csv
-import ConfigParser
+import configparser
 import collections
 import time
 import csv
@@ -22,9 +22,11 @@ from datetime import datetime
 from scipy.spatial.distance import cdist,pdist,squareform
 import theano.sandbox
 import shutil
-theano.sandbox.cuda.use('gpu0')
+import scipy.io as scio
 
-
+#theano.sandbox.cuda.use('gpu0')
+os.environ["THEANO_FLAGS"] = "mode=FAST_RUN,device=cuda0,dnn.enabled=False,floatX=float32"
+os.environ["KERAS_BACKEND"] = "theano"
 
 
 seed = 7
@@ -76,7 +78,7 @@ def load_dataset_One_Video_Features(Test_Video_Path):
 
     count = -1;
     VideoFeatues = []
-    for feat in xrange(0, num_feat):
+    for feat in range(0, int(num_feat)):
         feat_row1 = np.float32(words[feat * 4096:feat * 4096 + 4096])
         count = count + 1
         if count == 0:
@@ -92,11 +94,11 @@ def load_dataset_One_Video_Features(Test_Video_Path):
 print("Starting testing...")
 
 
-AllTest_Video_Path = '/newdata/UCF_Anomaly_Dataset/Dataset/CVPR_Data/C3D_Complete_Video_txt/Test/'
+AllTest_Video_Path = '/home/gicheol/lab/test/c3d_feature_shanghaitech/all/test'
 # AllTest_Video_Path contains C3D features (txt file)  of each video. Each file contains 32 features, each of 4096 dimensions.
-Results_Path = '../Eval_Res/'
+Results_Path = '/home/gicheol/lab/Anomaly_Detection/Eval_Res/'
 # Results_Path is the folder where you can save your results
-Model_dir='../Trained_AnomalyModel/'
+Model_dir='./'
 # Model_dir is the folder where we have placed our trained weights
 weights_path = Model_dir + 'weights_L1L2.mat'
 # weights_path is Trained model weights
@@ -122,7 +124,8 @@ for iv in range(nVideos):
     aa=All_Test_files[iv]
     aa=aa[0:-4]
     A_predictions_path = Results_Path + aa + '.mat'  # Save array of 1*32, containing anomaly score for each segment. Please see Evaluate Anomaly Detector to compute  ROC.
-    print "Total Time took: " + str(datetime.now() - time_before)
+    print ("Total Time took: " + str(datetime.now() - time_before))
+    scio.savemat(A_predictions_path,{aa:predictions})
 
 
 
